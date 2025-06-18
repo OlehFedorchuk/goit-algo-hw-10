@@ -1,26 +1,27 @@
-from pulp import LpMaximize, LpProblem, LpVariable, LpStatus, value
+from pulp import *
 
-# Створюємо модель задачі максимізації
-model = LpProblem("Drink_Production_Optimization", LpMaximize)
+# Створення задачі
+model = LpProblem("Maximize_Drink_Production", LpMaximize)
 
-# Змінні: кількість одиниць лимонаду (x) та фруктового соку (y)
-x = LpVariable("Lemonade", lowBound=0, cat='Integer')
-y = LpVariable("FruitJuice", lowBound=0, cat='Integer')
+# Змінні
+lemonade = LpVariable("Lemonade", lowBound=0, cat=LpInteger)
+fruit_juice = LpVariable("Fruit_Juice", lowBound=0, cat=LpInteger)
 
-# Цільова функція: максимізувати суму вироблених продуктів
-model += x + y, "Total_Products"
+# Ціль
+model += lemonade + fruit_juice
 
-# Обмеження на ресурси:
-model += 2*x + 1*y <= 100, "Water_limit"            # Вода
-model += 1*x <= 50, "Sugar_limit"                   # Цукор
-model += 1*x <= 30, "Lemon_juice_limit"             # Лимонний сік
-model += 2*y <= 40, "Fruit_puree_limit"             # Фруктове пюре
+# Обмеження
+model += 2 * lemonade + fruit_juice <= 100
+model += lemonade <= 50
+model += lemonade <= 30
+model += 2 * fruit_juice <= 40
 
-# Розв'язуємо задачу
-model.solve()
+# Вказуємо явно використання CBC-солвера
+solver = getSolver("PULP_CBC_CMD", msg=True)
+model.solve(solver)
 
-# Виводимо результати
-print("Статус розв'язку:", LpStatus[model.status])
-print("Кількість лимонаду:", x.value())
-print("Кількість фруктового соку:", y.value())
-print("Загальна кількість вироблених продуктів:", value(model.objective))
+# Результати
+print("Status:", LpStatus[model.status])
+print("Lemonade:", lemonade.varValue)
+print("Fruit Juice:", fruit_juice.varValue)
+print("Total:", value(model.objective))
